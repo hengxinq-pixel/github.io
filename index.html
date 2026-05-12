@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2026 槟城 3 天轻松吃喝行程</title>
+  <link rel="preconnect" href="https://unpkg.com" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root {
+      --ink: #222224;
+      --muted: #66615c;
+      --line: #ddd5cb;
+      --paper: #fffaf2;
+      --panel: #ffffff;
+      --sea: #197c86;
+      --spice: #b43f2d;
+      --leaf: #3d7b4f;
+      --gold: #d59627;
+      --shadow: 0 14px 42px rgba(42, 35, 26, .12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      line-height: 1.6;
+    }
+
+    a { color: var(--sea); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    header {
+      min-height: 86vh;
+      display: grid;
+      align-items: end;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.68)),
+        url("https://commons.wikimedia.org/wiki/Special:FilePath/Penang%20-%20Little%20Children%20on%20a%20Bicycle.JPG?width=1800") center / cover;
+      color: #fff;
+    }
+
+    .hero-inner {
+      width: min(1120px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 96px 0 72px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      padding: 6px 11px;
+      border: 1px solid rgba(255,255,255,.35);
+      background: rgba(0,0,0,.22);
+      border-radius: 999px;
+      font-size: 13px;
+      letter-spacing: .02em;
+    }
+
+    h1 {
+      max-width: 860px;
+      margin: 22px 0 14px;
+      font-size: clamp(42px, 7vw, 88px);
+      line-height: 1.02;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 720px;
+      margin: 0;
+      font-size: clamp(18px, 2vw, 24px);
+      color: rgba(255,255,255,.9);
+    }
+
+    main {
+      width: min(1120px, calc(100% - 32px));
+      margin: -34px auto 80px;
+      position: relative;
+      z-index: 1;
+    }
+
+    section {
+      margin: 34px 0;
+      padding: 34px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    h2 {
+      margin: 0 0 18px;
+      font-size: clamp(26px, 3vw, 38px);
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 20px;
+      line-height: 1.25;
+    }
+
+    p { margin: 0 0 12px; }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .grid.three { grid-template-columns: repeat(3, 1fr); }
+    .grid.two { grid-template-columns: repeat(2, 1fr); }
+
+    .mini-card,
+    .day,
+    .place-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .mini-card { padding: 18px; }
+
+    .tag {
+      display: inline-block;
+      margin-bottom: 9px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #eef6f3;
+      color: var(--sea);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .tag.red { background: #fff0ec; color: var(--spice); }
+    .tag.green { background: #edf7ee; color: var(--leaf); }
+    .tag.gold { background: #fff6dc; color: #8a5d12; }
+
+    .meta {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 8px;
+    }
+
+    .summary-table th,
+    .summary-table td {
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      text-align: left;
+    }
+
+    .summary-table th {
+      width: 130px;
+      color: var(--spice);
+      font-weight: 800;
+      background: #fff7ed;
+    }
+
+    .route-rail {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .stop {
+      position: relative;
+      padding-left: 34px;
+    }
+
+    .stop::before {
+      content: "";
+      position: absolute;
+      left: 8px;
+      top: 7px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--sea);
+      box-shadow: 0 0 0 4px #dff1ef;
+    }
+
+    .stop:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      left: 13px;
+      top: 24px;
+      bottom: -14px;
+      width: 2px;
+      background: #c9e4e1;
+    }
+
+    .stop time {
+      display: block;
+      color: var(--spice);
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .day-header {
+      padding: 20px 20px 2px;
+      border-bottom: 1px solid var(--line);
+      background: #fffbf5;
+    }
+
+    .day-body { padding: 20px; }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    figure {
+      margin: 0;
+      min-height: 230px;
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+      background: #eee;
+    }
+
+    figure.tall { grid-row: span 2; min-height: 472px; }
+
+    figure img {
+      width: 100%;
+      height: 100%;
+      min-height: inherit;
+      object-fit: cover;
+      display: block;
+    }
+
+    figcaption {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 22px 14px 12px;
+      color: #fff;
+      font-size: 13px;
+      background: linear-gradient(180deg, transparent, rgba(0,0,0,.72));
+    }
+
+    .place-card img {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      display: block;
+    }
+
+    .place-card .content { padding: 16px; }
+
+    #routeMap,
+    #foodMap {
+      height: 520px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #eef3f2;
+    }
+
+    .map-note {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .transport {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .transport article {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .transport strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--spice);
+    }
+
+    .checklist {
+      display: grid;
+      gap: 8px;
+      padding-left: 0;
+      list-style: none;
+    }
+
+    .checklist li {
+      padding: 10px 12px;
+      border-left: 4px solid var(--gold);
+      background: #fff9e8;
+      border-radius: 4px;
+    }
+
+    .sources {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .sources li { margin-bottom: 6px; }
+
+    @media (max-width: 860px) {
+      main { width: min(100% - 20px, 760px); }
+      section { padding: 22px; }
+      .grid.three,
+      .grid.two,
+      .transport,
+      .photo-grid { grid-template-columns: 1fr; }
+      figure.tall { min-height: 270px; }
+      #routeMap,
+      #foodMap { height: 430px; }
+      .summary-table th,
+      .summary-table td {
+        display: block;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="hero-inner">
+      <div class="eyebrow">2026.05.29 - 05.31 · 两个人 · OZO George Town Penang</div>
+      <h1>槟城 3 天轻松吃喝小旅行</h1>
+      <p class="lead">榴莲园、猫猫海滩、世遗街区、Air Itam 小吃和几家经典槟城味道放在同一张慢节奏路线里。</p>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <h2>行程总览</h2>
+      <table class="summary-table">
+        <tr>
+          <th>5月29日<br>周五</th>
+          <td><strong>抵达 + 乔治市慢逛</strong><br>OZO 放行李，吃 Transfer Road / Sup Hameed 一带，下午蓝屋或娘惹博物馆，傍晚壁画街和姓周桥，晚上 Tek Sen 或汕头街小吃。</td>
+        </tr>
+        <tr>
+          <th>5月30日<br>周六</th>
+          <td><strong>Air Itam + 榴莲园</strong><br>上午极乐寺和亚依淡叻沙，中午去 Bao Sheng Durian Farm 做榴莲品尝，傍晚回城休息，晚上暹罗路炒粿条或 New Lane 夜市。</td>
+        </tr>
+        <tr>
+          <th>5月31日<br>周日</th>
+          <td><strong>猫猫海滩 + 海边收尾</strong><br>睡到自然醒后前往 Teluk Bahang Cat Beach，顺路 Batu Ferringhi / Tropical Spice Garden 二选一，回乔治市买伴手礼和吃煎蕊。</td>
+        </tr>
+      </table>
+    </section>
+
+    <section>
+      <h2>交通方式对比</h2>
+      <div class="transport">
+        <article>
+          <strong>Grab / 打车</strong>
+          <p>两个人最省心。OZO 到 Air Itam、Teluk Bahang、Balik Pulau 都适合用 Grab，少换乘、避开暴晒。</p>
+          <p class="meta">推荐度：高。周末晚高峰和下雨时加价明显。</p>
+        </article>
+        <article>
+          <strong>包车半日</strong>
+          <p>Day 2 榴莲园和 Day 3 猫猫海滩都在岛西侧，若想停拍照、绕景点，包车体验最好。</p>
+          <p class="meta">推荐度：高。适合 4-6 小时连走远点。</p>
+        </article>
+        <article>
+          <strong>Rapid Penang 巴士</strong>
+          <p>101 / 102 可到 Teluk Bahang；201 / 203 / 204 可到 Air Itam。便宜但慢，站点和等车更耗体力。</p>
+          <p class="meta">推荐度：中。想省预算可选。</p>
+        </article>
+        <article>
+          <strong>步行 + 短途车</strong>
+          <p>OZO 到世遗区、美食街、蓝屋、煎蕊可步行或短程 Grab，最适合第一天和晚上找吃的。</p>
+          <p class="meta">推荐度：高。中午热，走路量别贪多。</p>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2>每日轻松行程</h2>
+      <div class="grid three">
+        <article class="day">
+          <div class="day-header">
+            <span class="tag">Day 1</span>
+            <h3>乔治市初见：慢走、吃街头味</h3>
+            <p class="meta">重点：酒店周边、蓝屋/娘惹文化、壁画、姓氏桥</p>
+          </div>
+          <div class="day-body">
+            <div class="route-rail">
+              <div class="stop"><time>11:30 - 13:30</time>抵达 OZO，先吃附近的 Transfer Road Roti Canai、Sup Hameed 或 New World Park。</div>
+              <div class="stop"><time>15:00 - 16:30</time>蓝屋导览或 Pinang Peranakan Mansion 二选一，避开下午最热时段。</div>
+              <div class="stop"><time>17:00 - 18:30</time>Armenian Street 壁画、姓周桥看海边木屋。</div>
+              <div class="stop"><time>19:00 后</time>Tek Sen 晚餐；若想更随性，改去汕头街四果汤、鸭粥粿汁、炒粿条。</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="day">
+          <div class="day-header">
+            <span class="tag green">Day 2</span>
+            <h3>Air Itam + Bao Sheng 榴莲园</h3>
+            <p class="meta">重点：极乐寺、叻沙、树熟榴莲</p>
+          </div>
+          <div class="day-body">
+            <div class="route-rail">
+              <div class="stop"><time>09:30 - 11:00</time>极乐寺：先到高处观音像，再慢慢往下逛，少爬回头路。</div>
+              <div class="stop"><time>11:15 - 12:00</time>Air Itam Laksa，当地酸辣鱼汤叻沙，适合两人分食再留肚子。</div>
+              <div class="stop"><time>13:00 - 15:30</time>Bao Sheng Durian Farm。建议提前 WhatsApp 预约并确认当天品种、价格和套餐。</div>
+              <div class="stop"><time>18:00 后</time>回 OZO 休息，晚上吃 Siam Road Char Koay Teow 或 New Lane 夜市。</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="day">
+          <div class="day-header">
+            <span class="tag red">Day 3</span>
+            <h3>猫猫海滩 + 海边收尾</h3>
+            <p class="meta">重点：Cat Beach Sanctuary、Teluk Bahang、Batu Ferringhi</p>
+          </div>
+          <div class="day-body">
+            <div class="route-rail">
+              <div class="stop"><time>10:00 - 11:00</time>轻松早餐，准备现金或猫粮捐赠。穿不怕脏的鞋。</div>
+              <div class="stop"><time>11:30 - 13:00</time>Cat Beach Sanctuary：救助猫空间，不是精致猫咖，保持真实期待。</div>
+              <div class="stop"><time>13:30 - 15:30</time>Batu Ferringhi 海边午餐，或 Tropical Spice Garden 走香料花园。</div>
+              <div class="stop"><time>16:30 后</time>回乔治市，Penang Road Chendul + 伴手礼，晚些离开或继续住一晚。</div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2>真实感配图</h2>
+      <div class="photo-grid">
+        <figure class="tall">
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Char%20Kway%20Teow%2C%20Georgetown%2C%20Penang%2C%20Malaysia.JPG?width=900" alt="槟城炒粿条" />
+          <figcaption>槟城炒粿条：Siam Road 一类炭火炒法很有代表性</figcaption>
+        </figure>
+        <figure>
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Cendol%20in%20Penang.jpg?width=900" alt="槟城煎蕊" />
+          <figcaption>Penang Road Chendul：椰奶、椰糖、绿粉条的冰甜点</figcaption>
+        </figure>
+        <figure>
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/20190824%20Kek%20Lok%20Si-1.jpg?width=900" alt="槟城极乐寺" />
+          <figcaption>极乐寺：Day 2 适合上午去</figcaption>
+        </figure>
+        <figure>
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Buildings%20and%20walkway%20on%20Chew%20Jetty%20at%20George%20Town%2C%20Penang%20-%2053830275719.jpg?width=900" alt="姓周桥木栈道" />
+          <figcaption>姓周桥：傍晚散步比正午舒服</figcaption>
+        </figure>
+        <figure>
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Pinang%20Peranakan%20Mansion%20%28I%29.jpg?width=900" alt="Pinang Peranakan Mansion" />
+          <figcaption>娘惹博物馆：乔治市文化点，适合避暑</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section>
+      <h2>交通路线图</h2>
+      <div id="routeMap"></div>
+      <p class="map-note">地图线条为行程指示：蓝色是 Day 1 乔治市步行核心，绿色是 Day 2 Air Itam + 榴莲园，红色是 Day 3 猫猫海滩方向。实际路线请以 Grab / Google Maps / Waze 当天导航为准。</p>
+    </section>
+
+    <section>
+      <h2>OZO 酒店位置和周边美食地图</h2>
+      <div id="foodMap"></div>
+      <p class="map-note">OZO 到 Penang Road Chendul、Transfer Road、蓝屋都很近；Siam Road 和 Air Itam 建议打车。</p>
+    </section>
+
+    <section>
+      <h2>必吃与必去</h2>
+      <div class="grid three">
+        <article class="place-card">
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Cendol%20in%20Penang.jpg?width=700" alt="槟城煎蕊" />
+          <div class="content">
+            <span class="tag gold">甜品</span>
+            <h3>Penang Road Chendul</h3>
+            <p>离 OZO 不远，适合作为 Day 1 或 Day 3 下午的降温点。排队快，吃完可顺路买伴手礼。</p>
+          </div>
+        </article>
+        <article class="place-card">
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Kek%20Lok%20Si.JPG?width=700" alt="极乐寺" />
+          <div class="content">
+            <span class="tag green">景点</span>
+            <h3>极乐寺 + Air Itam Laksa</h3>
+            <p>两个点距离近，上午寺庙、午前叻沙，是轻松且很槟城的一组搭配。</p>
+          </div>
+        </article>
+        <article class="place-card">
+          <img src="https://images.unsplash.com/photo-1533743983669-94fa5c4338ec?auto=format&fit=crop&w=900&q=80" alt="猫咪在海边的氛围图" />
+          <div class="content">
+            <span class="tag red">必去</span>
+            <h3>Cat Beach Sanctuary</h3>
+            <p>Teluk Bahang 的救助猫海边空间。开放通常为 9:00 到日落，入场以捐赠现金、食物或猫用品为主。</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2>榴莲园建议</h2>
+      <div class="grid two">
+        <div class="mini-card">
+          <span class="tag green">首选</span>
+          <h3>Bao Sheng Durian Farm</h3>
+          <p>Balik Pulau 的三代榴莲园，官方强调 5-8 月榴莲季、老树和有机种植体验；常见品种包括 Musang King、Black Thorn、Red Prawn、D24 等。</p>
+          <p><strong>建议：</strong>5月29-31日刚好在季节开端，出发前 3-5 天 WhatsApp 确认当天掉果情况、套餐、价格和是否需要预约。</p>
+          <p class="meta">地址：150 Mk2 Sungai Pinang, Balik Pulau。OZO 过去建议包车或 Grab，单程约 45-60 分钟，山区路段不建议临时赶时间。</p>
+        </div>
+        <div class="mini-card">
+          <span class="tag gold">吃法</span>
+          <h3>两个人怎么点</h3>
+          <ul class="checklist">
+            <li>先请店家按“甜、苦、酒香/奶香”推荐 2-3 个小果，不要一开始就点太多。</li>
+            <li>先吃清淡甜香，再吃 Black Thorn / Musang King 这类浓郁款。</li>
+            <li>当天还要吃小吃的话，中午榴莲控制在 60-90 分钟，晚上回城再觅食。</li>
+            <li>榴莲价随天气和掉果浮动，开吃前确认每公斤价格或套餐价。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>小提醒</h2>
+      <ul class="checklist">
+        <li>5月底槟城热且可能阵雨，上午安排户外，下午用博物馆、咖啡店、酒店休息缓冲。</li>
+        <li>Cat Beach 是救助空间，环境会比较朴素；适合喜欢猫和愿意捐赠的人，不适合用“网红猫咖”标准期待。</li>
+        <li>Tek Sen、Siam Road Char Koay Teow 周末容易排队，轻松行程里把它们当“想吃就排，不想排就换 New Lane / 汕头街”。</li>
+        <li>寺庙和部分老宅建议穿轻便但不太暴露的衣服，带现金、小面额零钱和防晒。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>资料来源</h2>
+      <ol class="sources">
+        <li><a href="https://www.ozohotels.com/penang-malaysia/hotel-overview/about-us">OZO George Town Penang 官方地址</a>、<a href="https://www.ozohotels.com/penang-malaysia/hotel-overview/location">OZO 位置与距离说明</a></li>
+        <li><a href="https://www.catbeachpenang.org/visit">Cat Beach Sanctuary 官方访问说明</a>、<a href="https://onpenang.com/cat-beach-sanctuary/">OnPenang 2026 Cat Beach 访问体验</a></li>
+        <li><a href="https://durian.com.my/">Bao Sheng Durian Farm 官方网站</a>、<a href="https://durianpenang.com/locations/bao-sheng-durian">DurianPenang 的 Bao Sheng 信息</a></li>
+        <li><a href="https://penanghill.gov.my/index.php/en/tickets">Penang Hill 官方缆车时间</a>、<a href="https://www.travel-penang-malaysia.com/kek-lok-si-temple.html">极乐寺访问信息</a></li>
+        <li><a href="https://www.mypenang.gov.my/experience-2020/directory/932/?lg=en">myPenang 的 Tek Sen 信息</a>、<a href="https://penang-local.com/directory/charcoal-char-koay-teow/">Siam Road Char Koay Teow 信息</a>、<a href="https://www.bizmalay.com/en/penang-air-itam-laksa-012-500-7063">Air Itam Laksa 信息</a></li>
+        <li>页面图片来自 Wikimedia Commons 与 Unsplash；地图底图来自 OpenStreetMap。</li>
+      </ol>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const places = {
+      ozo: [5.4218, 100.3297],
+      blueMansion: [5.4213, 100.3359],
+      armenian: [5.4159, 100.3378],
+      chewJetty: [5.4145, 100.3380],
+      peranakan: [5.4180, 100.3410],
+      kekLokSi: [5.4000, 100.2741],
+      airItamLaksa: [5.40144, 100.27788],
+      baoSheng: [5.3568, 100.2105],
+      catBeach: [5.4635, 100.2140],
+      batuFerringhi: [5.4750, 100.2510],
+      chendul: [5.41718, 100.33061],
+      transferRoad: [5.4210, 100.3264],
+      supHameed: [5.4211, 100.3308],
+      tekSen: [5.4173, 100.3371],
+      siamRoad: [5.4139, 100.3148],
+      newLane: [5.4144, 100.3236],
+      newWorldPark: [5.4212, 100.3248]
+    };
+
+    function baseMap(id, center, zoom) {
+      const map = L.map(id, { scrollWheelZoom: false }).setView(center, zoom);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "&copy; OpenStreetMap contributors"
+      }).addTo(map);
+      return map;
+    }
+
+    function marker(map, key, label, color) {
+      const icon = L.divIcon({
+        className: "custom-marker",
+        html: `<span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:${color};border:3px solid white;box-shadow:0 1px 8px rgba(0,0,0,.35)"></span>`,
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
+      });
+      return L.marker(places[key], { icon }).addTo(map).bindPopup(label);
+    }
+
+    const routeMap = baseMap("routeMap", [5.414, 100.296], 11);
+    marker(routeMap, "ozo", "OZO George Town Penang", "#197c86");
+    marker(routeMap, "kekLokSi", "极乐寺 Kek Lok Si", "#3d7b4f");
+    marker(routeMap, "airItamLaksa", "Air Itam Laksa", "#d59627");
+    marker(routeMap, "baoSheng", "Bao Sheng Durian Farm", "#3d7b4f");
+    marker(routeMap, "catBeach", "Cat Beach Sanctuary", "#b43f2d");
+    marker(routeMap, "batuFerringhi", "Batu Ferringhi", "#b43f2d");
+    marker(routeMap, "chewJetty", "姓周桥 Chew Jetty", "#197c86");
+    marker(routeMap, "armenian", "Armenian Street 壁画区", "#197c86");
+
+    L.polyline([places.ozo, places.blueMansion, places.armenian, places.chewJetty], {
+      color: "#197c86",
+      weight: 5,
+      opacity: .85
+    }).addTo(routeMap).bindPopup("Day 1 乔治市轻松步行核心");
+
+    L.polyline([places.ozo, places.kekLokSi, places.airItamLaksa, places.baoSheng, places.ozo], {
+      color: "#3d7b4f",
+      weight: 5,
+      opacity: .82
+    }).addTo(routeMap).bindPopup("Day 2 Air Itam + 榴莲园");
+
+    L.polyline([places.ozo, places.catBeach, places.batuFerringhi, places.ozo], {
+      color: "#b43f2d",
+      weight: 5,
+      opacity: .82
+    }).addTo(routeMap).bindPopup("Day 3 猫猫海滩 + 海边");
+
+    const foodMap = baseMap("foodMap", places.ozo, 15);
+    marker(foodMap, "ozo", "OZO George Town Penang", "#197c86");
+    marker(foodMap, "chendul", "Penang Road Famous Teochew Chendul", "#d59627");
+    marker(foodMap, "transferRoad", "Transfer Road Roti Canai 一带", "#d59627");
+    marker(foodMap, "supHameed", "Sup Hameed", "#d59627");
+    marker(foodMap, "tekSen", "Tek Sen Restaurant", "#b43f2d");
+    marker(foodMap, "newWorldPark", "New World Park 小吃", "#d59627");
+    marker(foodMap, "newLane", "New Lane 夜市", "#d59627");
+    marker(foodMap, "siamRoad", "Siam Road Char Koay Teow", "#b43f2d");
+    L.circle(places.ozo, {
+      radius: 900,
+      color: "#197c86",
+      fillColor: "#197c86",
+      fillOpacity: .08,
+      weight: 2
+    }).addTo(foodMap).bindPopup("OZO 周边约 900 米轻松觅食圈");
+  </script>
+</body>
+</html>
